@@ -3,6 +3,8 @@ streamlit/__pycache__
 *.pyc
 *.env
 
+airflow/logs/
+
 
 # Airflow configuration
 airflow.cfg
