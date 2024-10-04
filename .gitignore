@@ -2,3 +2,4 @@ streamlit/test/
 streamlit/__pycache__
 *.pyc
 *.env
+airflow/logs/
