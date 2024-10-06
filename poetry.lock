@@ -2009,8 +2009,5 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-<<<<<<< Updated upstream
 content-hash = "1d7cc4e9cd66085e3ca408e5b43a5e62b6222ca8c1c5352d87822b02223b9976"
-=======
 content-hash = "2777a91dff1502f42b7bacf37706fcd292351deb110049d0a8b24a2e57efb53d"
->>>>>>> Stashed changes
