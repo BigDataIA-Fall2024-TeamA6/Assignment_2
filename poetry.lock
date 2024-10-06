@@ -282,6 +282,16 @@ files = [
 ]
 
 [[package]]
+name = "env"
+version = "0.1.0"
+description = "Environment Variables for Humans"
+optional = false
+python-versions = "*"
+files = [
+    {file = "env-0.1.0.tar.gz", hash = "sha256:e07975087b08dd2aea45bf83447c7e21f43cf916bbc2a0722fceb66e54d03935"},
+]
+
+[[package]]
 name = "fastapi"
 version = "0.115.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -1809,4 +1819,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "5c755be0d2f8a256494ef314d2b2363adbe76fc8deee1bd975070bbda48bd21b"
+content-hash = "1d7cc4e9cd66085e3ca408e5b43a5e62b6222ca8c1c5352d87822b02223b9976"
