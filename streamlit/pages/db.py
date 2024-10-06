@@ -1,13 +1,5 @@
 import mysql.connector
-from sqlalchemy import create_engine
 
-
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://admin:amazonrds7245@database-1.cdwumcckkqqt.us-east-1.rds.amazonaws.com/gaia_benchmark_dataset_validation"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-print("Engine created")
 
 class DBConnection:
     _instance = None
