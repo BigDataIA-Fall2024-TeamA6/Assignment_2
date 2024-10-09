@@ -2,11 +2,10 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
+import openai  # Replace OpenAI with openai
 from pages.db import DBConnection  # Assuming DBConnection is in pages/db.py
-import requests
 import json
-import time  # For polling the DAG run status
+import requests
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -15,8 +14,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     api_key = st.secrets["OPENAI_API_KEY"]
 
-
-client = OpenAI(api_key=api_key)
+openai.api_key = api_key  # Set API key
 
 # Establish database connection
 try:
@@ -28,15 +26,31 @@ except Exception as e:
 # Function to insert log into log_tb with extracted PDF output in method_output column
 def insert_log_into_log_tb(task_id, question, method, username, method_output):
     try:
+        # Treat method_output as plain text (not JSON)
+        method_output_text = str(method_output)
+
         insert_query = """
         INSERT INTO log_tb (task_id, question, method, username, method_output)
         VALUES (%s, %s, %s, %s, %s)
         """
-        cursor.execute(insert_query, (task_id, question, method, username, method_output))
+        cursor.execute(insert_query, (task_id, question, method, username, method_output_text))
         db.get_connection().commit()  # Commit the transaction
         st.success("Log successfully inserted into log_tb!")
     except Exception as e:
         st.error(f"Error inserting into log_tb: {e}")
+        db.get_connection().rollback()
+
+# Function to update log_tb with LLM output
+def update_log_with_llm_output(task_id, llm_output):
+    try:
+        update_query = """
+        UPDATE log_tb SET llm_output = %s WHERE task_id = %s
+        """
+        cursor.execute(update_query, (llm_output, task_id))
+        db.get_connection().commit()  # Commit the transaction
+        st.success("LLM output successfully updated in log_tb!")
+    except Exception as e:
+        st.error(f"Error updating LLM output in log_tb: {e}")
         db.get_connection().rollback()
 
 # Function to fetch test cases from pdf_question_tb
@@ -50,60 +64,19 @@ def get_questions():
         st.error(f"Error fetching questions: {e}")
         return pd.DataFrame()  # Return an empty DataFrame on error
 
-# Function to call OpenAI GPT-4 API using ChatCompletion
+# Function to get LLM output via FastAPI
 def get_llm_output(question, extraction_output):
     try:
-        messages = [
-            {"role": "system", "content": "You are an AI assistant that helps users extract information from PDF documents."},
-            {"role": "user", "content": f"Question: {question}\n\nPDF Extraction Output: {extraction_output}\n\nPlease provide an answer based on the extraction."}
-        ]
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=3000
-        )
-        llm_output = response.choices[0].message.content.strip()
-        return llm_output
-    except Exception as e:
-        st.error(f"Error calling GPT-4 API: {e}")
-        return ""
-
-# Function to trigger the Airflow DAG
-def trigger_airflow_dag(dag_id, api_chosen, file_path):
-    airflow_url = f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns"
-    data = {
-        "conf": {
-            "api_chosen": api_chosen,
-            "file_path": file_path  # Pass the file path
-        }
-    }
-    response = requests.post(airflow_url, json=data, auth=("airflow", "airflow"))
-    if response.status_code == 200:
-        st.success("Airflow DAG triggered successfully!")
-        dag_run_id = response.json()["dag_run_id"]  # Capture the DAG run ID
-        return dag_run_id
-    else:
-        st.error(f"Failed to trigger DAG: {response.text}")
-        return None
-
-# Function to get the DAG run output
-def get_dag_run_output(dag_id, dag_run_id, api_chosen, selected_test_case):
-    airflow_dag_run_url = f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}"
-    while True:
-        response = requests.get(airflow_dag_run_url, auth=("airflow", "airflow"))
+        api_url = "http://localhost:8000/get_llm_output"
+        response = requests.post(api_url, json={"question": question, "extracted_output": extraction_output})
         if response.status_code == 200:
-            dag_run_info = response.json()
-            state = dag_run_info["state"]
-            if state == "success":
-                st.success("DAG run completed successfully!")
-                return True
-            elif state == "failed":
-                st.error("DAG run failed!")
-                return False
-            time.sleep(2)
+            return response.json().get("llm_output", "")
         else:
-            st.error(f"Failed to fetch DAG run status: {response.text}")
-            return False
+            st.error(f"Failed to fetch LLM output: {response.text}")
+            return ""
+    except Exception as e:
+        st.error(f"Error calling LLM API: {e}")
+        return ""
 
 # User landing page function
 def user_landing():
@@ -148,37 +121,34 @@ def user_landing():
             llm_chosen = st.session_state.LLM_chosen
 
             if st.button("Extract PDF"):
-                dag_run_id = trigger_airflow_dag("api_chosen_dag", api_chosen, file_path)
-                if dag_run_id:
-                    dag_state = get_dag_run_output("api_chosen_dag", dag_run_id, api_chosen=api_chosen, selected_test_case=selected_test_case)
-                    if dag_state:
-                        output_col = 'pymupdf_output' if api_chosen == 'PyMuPDF' else 'docai_output'
-                        cursor.execute(f"SELECT {output_col} FROM pdf_question_tb WHERE serial_num = %s", (selected_test_case,))
-                        result = cursor.fetchone()
-                        st.write(result)
-                        if result:
-                            extracted_text = result[0]
-                            try:
-                                extracted_json = json.loads(extracted_text)
-                                pdf_text = extracted_json.get('text', None)
-                                st.text_area(value=pdf_text, label="PDF extraction output", height=150)
-                            except json.JSONDecodeError as j:
-                                st.error(j)
-                        else:
-                            st.error("No output found for the selected test case.")
-                    else:
-                        st.error("Failed to extract PDF.")
-                else:
-                    st.error("Failed to trigger the DAG. Please try again.")
+                # Directly fetch from the database instead of triggering a DAG
+                output_col = 'pymupdf_output' if api_chosen == 'PyMuPDF' else 'docai_output'
+                cursor.execute(f"SELECT {output_col} FROM pdf_question_tb WHERE serial_num = %s", (selected_test_case,))
+                result = cursor.fetchone()
+                if result:
+                    extracted_text = result[0]
+                    try:
+                        extracted_json = json.loads(extracted_text)
+                        pdf_text = extracted_json.get('text', None)
+                        st.text_area(value=pdf_text, label="PDF extraction output", height=150)
+                        st.session_state['method_output'] = pdf_text  # Save the extracted output for later use
 
-            st.write(f"Selected PDF Extraction Type: {api_chosen}")
-            st.write(f"Selected LLM Model: {llm_chosen}")
+                        # Insert into log_tb after displaying PDF content
+                        insert_log_into_log_tb(task_id, question, api_chosen, username, pdf_text)
+
+                    except json.JSONDecodeError as j:
+                        st.error(j)
+                else:
+                    st.error("No output found for the selected test case.")
 
             if st.button("Get LLM Output"):
                 method_output = st.session_state.get('method_output', '')
                 if method_output:
                     llm_output = get_llm_output(question, method_output)
                     st.text_area("LLM Output:", value=llm_output, height=200)
+
+                    # Update log_tb with LLM output
+                    update_log_with_llm_output(task_id, llm_output)
                 else:
                     st.error("Please extract the PDF content first before generating LLM output!")
 
