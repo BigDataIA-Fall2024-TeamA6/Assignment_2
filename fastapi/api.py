@@ -1,10 +1,15 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+import openai  # Assuming openai module is available
+from openai import OpenAI
 import mysql.connector
 from fastapi.security import OAuth2PasswordBearer
+import streamlit as st
 
 # Secret key for JWT
 SECRET_KEY = "bigdataintelligenceandanalytics"
@@ -17,6 +22,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
 
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY")
+if api_key is None:
+    api_key = st.secrets["OPENAI_API_KEY"]
+
+client = OpenAI(api_key=api_key)
 
 # Database connection
 def get_db_connection():
@@ -40,6 +52,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+
+class LLMRequest(BaseModel):
+    question: str
+    extracted_output: str
 
 # Hash password
 def hash_password(password: str):
@@ -113,3 +129,25 @@ async def fetch_questions(token: str = Depends(oauth2_scheme)):
     connection.close()
 
     return data
+
+@app.post("/get_llm_output")
+async def get_llm_output(llm_request: LLMRequest):
+    question = llm_request.question
+    extracted_output = llm_request.extracted_output
+
+    # Call GPT-4 API using the OpenAI library
+    messages = [
+        {"role": "system", "content": "You are an AI assistant that helps users extract information from PDF documents."},
+        {"role": "user", "content": f"Question: {question}\n\nPDF Extraction Output: {extracted_output}\n\nPlease provide an answer based on the extraction."}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=3000
+        )
+        llm_output = response.choices[0].message.content
+        return {"llm_output": llm_output}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calling GPT-4 API: {e}")
