@@ -51,6 +51,7 @@ def get_dag_run_output(dag_id, dag_run_id, api_chosen, selected_test_case):
     
     while True:
         response = requests.get(airflow_dag_run_url, auth=("airflow", "airflow"))
+        #st.write(response.json())
         if response.status_code == 200:
             dag_run_info = response.json()
             state = dag_run_info["state"]
@@ -101,44 +102,48 @@ def user_landing():
 
         llm_chosen = st.session_state.LLM_chosen
 
+        # Extract PDF button
         if st.button("Extract PDF"):
             dag_run_id = trigger_airflow_dag("api_chosen_dag", api_chosen, file_path)  # Get DAG run ID
             if dag_run_id:
                 # Poll for the DAG result and fetch the extracted text
                 dag_state = get_dag_run_output("api_chosen_dag", dag_run_id, 
-                                                    api_chosen=api_chosen, selected_test_case=selected_test_case)
-                
-                # Display the extracted text in a text area
-                st.write(dag_state)
+                                                api_chosen=api_chosen, selected_test_case=selected_test_case)
+
+                # If DAG state is successful, display success message and Preview PDF button
                 if dag_state:
-                    # check output type and Select statement
-                    # Fetch the appropriate output based on the selected extraction method
-                    output_col = 'pymupdf_output' if api_chosen == 'PyMuPDF' else 'docai_output'
-                    
-                    # Query the database to get the extracted text based on the selected serial number
-                    cursor.execute(f"SELECT {output_col} FROM pdf_question_tb WHERE serial_num = %s", (selected_test_case,))
-                    result = cursor.fetchone()
-                    
-                    if result:
-                        
-                        extracted_text = result[0]                    
-                        # Check if the result is in JSON format
-                        try:
-                            # Attempt to parse JSON formatted text
-                            extracted_json = json.loads(extracted_text)
-                            pdf_text = extracted_json.get('text',None)
-                            st.text_area(value=pdf_text, label="PDF extraction output", height=150)  # Display the extracted text
-                        except json.JSONDecodeError as j:
-                            st.error(j)
-                            # If not JSON, assume it's plain text
-                            pass
-                    
+                    st.success("PDF Preview is ready!")
+                    st.session_state['preview_ready'] = True
                 else:
-                    st.error("No output found for the selected test case.")
+                    st.error("Failed to extract PDF. Please try again.")
             else:
                 st.error("Failed to extract PDF. Please try again.")
 
+        # Preview PDF button (only shown if preview is ready)
+        if st.session_state.get('preview_ready'):
+            if st.button("Preview PDF"):
+                output_col = 'pymupdf_output' if api_chosen == 'PyMuPDF' else 'docai_output'
 
+                # Query the database to get the extracted text based on the selected serial number
+                cursor.execute(f"SELECT {output_col} FROM pdf_question_tb WHERE serial_num = %s", (selected_test_case,))
+                result = cursor.fetchone()
+
+                if result:
+                    extracted_text = result[0]
+                    try:
+                        # Attempt to parse JSON formatted text
+                        extracted_json = json.loads(extracted_text)
+                    except (TypeError, json.JSONDecodeError) as e:
+                        st.error(f"Failed to load JSON: {str(e)}")
+                        extracted_json = {}
+
+                    pdf_text = extracted_json.get('text', extracted_text)  # Fallback to extracted_text if not JSON
+                    st.text_area(value=pdf_text, label="PDF extraction output", height=150)  # Display the extracted text
+
+                    
+                else:
+                    st.error("No output found for the selected test case.")
+            
         st.write("LLM Output: Test output 1344")
 
         # Print the selected values
