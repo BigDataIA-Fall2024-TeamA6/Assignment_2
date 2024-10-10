@@ -1,3 +1,6 @@
+import os
+import streamlit as st
+from openai import OpenAI
 from fastapi import FastAPI, Depends, HTTPException, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -5,6 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import mysql.connector
 from fastapi.security import OAuth2PasswordBearer
+from dotenv import load_dotenv
 
 # Secret key for JWT
 SECRET_KEY = "bigdataintelligenceandanalytics"
@@ -13,9 +17,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Password hashing and verifying
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  
 
 app = FastAPI()
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY")
+if api_key is None:
+    api_key = st.secrets["OPENAI_API_KEY"]
+
+client = OpenAI(api_key=api_key)
+
 
 
 # Database connection
@@ -40,6 +52,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+    
+class LLMRequest(BaseModel):
+    question: str
+    extracted_output: str
 
 # Hash password
 def hash_password(password: str):
@@ -106,10 +122,47 @@ async def fetch_questions(token: str = Depends(oauth2_scheme)):
     # Query data for the logged-in user
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    query = "SELECT questions FROM pdf_question_tb"
+    query = "SELECT serial_num, task_id, question, file_path FROM pdf_question_tb where username = %s"
     cursor.execute(query, (logged_in,))
     data = cursor.fetchall()
     cursor.close()
     connection.close()
-
     return data
+
+@app.get("/fetchrecords")
+async def fetch(output_col: str, selected_test_case: int):
+    try:
+        query = (f"SELECT {output_col} FROM pdf_question_tb WHERE serial_num = {selected_test_case}")
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query)
+        records = cursor.fetchone()
+        if records is None:
+            raise HTTPException(status_code=404, detail="Record not found")
+        return records
+    except Exception as e:
+        raise HTTPException(status_code=500)
+    
+@app.post("/get_llm_output")
+async def get_llm_output(llm_request: LLMRequest):
+    question = llm_request.question
+    extracted_output = llm_request.extracted_output
+
+    # Call GPT-4 API using the OpenAI library
+    messages = [
+        {"role": "system", "content": "You are an AI assistant that helps users extract information from PDF documents."},
+        {"role": "user", "content": f"Question: {question}\n\nPDF Extraction Output: {extracted_output}\n\nPlease provide an answer based on the extraction."}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=3000
+        )
+        llm_output = response.choices[0].message.content
+        return {"llm_output": llm_output}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calling GPT-4 API: {e}")
+
+    

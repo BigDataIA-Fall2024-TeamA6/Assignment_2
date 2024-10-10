@@ -1,6 +1,4 @@
 import streamlit as st
-import bcrypt
-from pages.db import DBConnection
 from fastapi import FastAPI
 import mysql.connector
 import requests
@@ -34,6 +32,8 @@ def main():
     if st.button("Login",key='login'):
 
         response = requests.post(f"{FASTAPI_URL}/token", json={"username":username,"password": password,"user_type":user_type})
+        print(response.json())
+        st.session_state.access_token = response.json()['access_token']
         if response.status_code == 200:
             st.session_state.username = username
             if user_type == 'user':

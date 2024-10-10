@@ -148,7 +148,7 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *airflow-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "PyMuPDF"
+      _PIP_ADDITIONAL_REQUIREMENTS: "PyMuPDF google-cloud-documentai"
 
   airflow-worker:
     <<: *airflow-common
@@ -166,7 +166,7 @@ services:
       <<: *airflow-common-env
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
-      _PIP_ADDITIONAL_REQUIREMENTS: "PyMuPDF"
+      _PIP_ADDITIONAL_REQUIREMENTS: "PyMuPDF google-cloud-documentai"
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
