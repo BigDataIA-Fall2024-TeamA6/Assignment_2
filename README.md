@@ -12,11 +12,9 @@
 
 ### **Project Resources**:
 ---
-a. **Diagrams**: [GAIA Model Evaluation Workflow](https://github.com/BigDataIA-Fall2024-TeamA6/Assignment_2)  
-b. **Fully Documented Code Labs**: [Codelabs Preview](https://codelabs-preview.appspot.com/?file_id=1ZGC6z68GhI9cBCVnVT5GIKWnzV1W4MHhyUIaEwnXQ-Q/edit)  
-c. **Video of the Submission**: [Zoom Recording](https://northeastern.zoom.us/rec/share/MQzuXGKgKpGnDPtB6VAmGLEtU0ioh_46KcFMUtSH9CtFNUAalQ6dVYT5xFjuA7iw.V3glsyZ5cz9BKUDt)  
-d. **Link to Working Application**: [Streamlit App](https://team6app1.streamlit.app/)  
-e. **GitHub Project**: [GitHub Repository](https://github.com/BigDataIA-Fall2024-TeamA6/Assignment_2)
+a. **Diagrams**: [GAIA Model Evaluation Workflow](https://drive.google.com/file/d/1u_7QFrIPRw1XrW3DDqs0HKmt_RSUFLEc/view?usp=sharing)  
+b. **Fully Documented Code Labs**: [Codelabs Preview](https://codelabs-preview.appspot.com/?file_id=1t-3O6QNRqiGYo4EPxKj4iXyGJRKaXJCUTGWQlVc279o/#0)  
+c. **Video of the Submission**: [Zoom Recording](https://northeastern.zoom.us/rec/share/MQzuXGKgKpGnDPtB6VAmGLEtU0ioh_46KcFMUtSH9CtFNUAalQ6dVYT5xFjuA7iw.V3glsyZ5cz9BKUDt)
 
 
 
