@@ -170,9 +170,14 @@ def user_landing():
     with col1:
         st.header("XtractPDF App")
     with col3:
-        if st.button("Summary"):
-            st.switch_page("pages/summary.py")
         
+        if st.button("Logout"):
+            # Clear the session state to remove the token and user-related data
+            st.session_state.pop("username", None)
+            st.session_state.pop("access_token", None)
+            st.success("You have been logged out!")
+            st.switch_page("pages/login.py")
+            
     if 'username' not in st.session_state:
         st.error("You need to log in first!")
         st.stop()
@@ -180,12 +185,8 @@ def user_landing():
     username = st.session_state['username']
     
     with col3:
-        if st.button("Logout"):
-            # Clear the session state to remove the token and user-related data
-            st.session_state.pop("username", None)
-            st.session_state.pop("access_token", None)
-            st.success("You have been logged out!")
-            st.switch_page("pages/login.py")
+        if st.button("Summary"):
+            st.switch_page("pages/summary.py")
 
     test_cases = get_questions()
     test_cases_dict = dict(zip(test_cases['serial_num'], test_cases['question']))
@@ -200,7 +201,7 @@ def user_landing():
         question = st.text_area("Question:", value=selected_question, key="edited_question",height=150)
         st.session_state['selected_question'] = question    # Save selected question in session state
         st.write(f"Accessing File: {str(file_path).split('/')[-1]}")  # Print the file name with extension
-
+        st.write(question)
         serial_num = selected_test_case
         task_id = serial_num
         

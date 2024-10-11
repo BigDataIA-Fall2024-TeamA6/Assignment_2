@@ -3,12 +3,16 @@ import pandas as pd
 from sqlalchemy import create_engine
 from pages.db import DBConnection
 
+if st.button("Back to Login"):
+            st.switch_page("pages/user_landing.py")
+
 # Header for the admin page
-st.header("Summary Log")
-st.write(f"You are logged in as Admin.")
+st.header("Summary Log")    
+
 
 # Fetch the data from the 'log_tb' table for a specific user
 def fetch_log_table_data(username):
+    st.subheader(f"Logged in as {username}")
     db_instance = DBConnection.get_instance()
     cursor = db_instance.get_cursor()
 
