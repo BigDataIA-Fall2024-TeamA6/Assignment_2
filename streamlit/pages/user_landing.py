@@ -6,7 +6,9 @@ from pages.db import DBConnection
 import requests
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv()
 app = FastAPI()
 FASTAPI_URL = "http://127.0.0.1:8000"
 
@@ -162,20 +164,30 @@ def fetch_from_db(output_col: str, selected_test_case: int):
 def user_landing():
     if "pdf_extracted" not in st.session_state:
         st.session_state.pdf_extracted = False
-
-    col1, col2 = st.columns(2)
+    
+    col1, col2, col3 = st.columns(3)
+        
     with col1:
         st.header("XtractPDF App")
-    with col2:
-        if st.button("Go to Summary"):
-            st.switch_page("pages/summary.py")
+    with col3:
         
+        if st.button("Logout"):
+            # Clear the session state to remove the token and user-related data
+            st.session_state.pop("username", None)
+            st.session_state.pop("access_token", None)
+            st.success("You have been logged out!")
+            st.switch_page("pages/login.py")
+            
     if 'username' not in st.session_state:
         st.error("You need to log in first!")
         st.stop()
         
     username = st.session_state['username']
     
+    with col3:
+        if st.button("Summary"):
+            st.switch_page("pages/summary.py")
+
     test_cases = get_questions()
     test_cases_dict = dict(zip(test_cases['serial_num'], test_cases['question']))
     selected_test_case = st.selectbox("Select a Test Case:", options=test_cases["serial_num"], key="select_test_case")
@@ -186,10 +198,9 @@ def user_landing():
 
         st.session_state['selected_test_case'] = selected_test_case  # Save selected test case in session state
 
-        question = st.text_area("Question:", value=selected_question, key="edited_question")
+        question = st.text_area("Question:", value=selected_question, key="edited_question",height=150)
         st.session_state['selected_question'] = question    # Save selected question in session state
         st.write(f"Accessing File: {str(file_path).split('/')[-1]}")  # Print the file name with extension
-
         serial_num = selected_test_case
         task_id = serial_num
         
