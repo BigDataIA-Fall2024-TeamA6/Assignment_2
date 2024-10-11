@@ -4,7 +4,7 @@ import mysql.connector
 import requests
 
 app = FastAPI()
-FASTAPI_URL = "http://127.0.0.1:8000"
+FASTAPI_URL = "http://fastapi:8000"
 
 
 def create_connection():
@@ -29,29 +29,26 @@ def main():
     password = st.text_input("password",type="password",key='pword')
     user_type = st.selectbox("Choose User type",options=['user','admin'],key='select_user_type')
 
-    col1,col2 = st.columns(2)
-    # Handle account creation
+    if st.button("Login",key='login'):
 
-    with col1:
-        if st.button("Login",key='login'):
-
-            response = requests.post(f"{FASTAPI_URL}/token", json={"username":username,"password": password,"user_type":user_type})
-            print(response.json())
+        response = requests.post(f"{FASTAPI_URL}/token", json={"username":username,"password": password,"user_type":user_type})
+        print(response.json())        
+        if response.status_code == 200:
             st.session_state.access_token = response.json()['access_token']
-            if response.status_code == 200:
-                st.session_state.username = username
-                if user_type == 'user':
-                    st.switch_page("pages/user_landing.py")
-                elif user_type == 'admin':
-                    st.switch_page("pages/admin.py")
-            elif response.status_code == 500:
-                st.error(f"Error {response.status_code} Server down :(")
-            else:
-                st.error(f"Error {response.status_code} Please check credentials or user type!")
+            st.session_state.username = username
+            if user_type == 'user':
+                st.switch_page("pages/user_landing.py")
+            elif user_type == 'admin':
+                st.switch_page("pages/admin.py")
+        elif response.status_code == 500:
+            st.error(f"Error {response.status_code} Server down :(")
+        else:
+            st.error(f"Error {response.status_code} Please check credentials or user type!")
         
-    with col2:
-        if st.button("Create User",key='create_user'):
-            st.switch_page("pages/create_user.py") 
+                
+
+    if st.button("Create User",key='create_user'):
+        st.switch_page("pages/create_user.py") 
 
 
 if __name__ == "__main__":

@@ -3,11 +3,10 @@ import pandas as pd
 from sqlalchemy import create_engine
 from pages.db import DBConnection  # Assuming this is in a separate file, e.g., db_connection.py
 
-if st.button("Back to Login"):
-            st.switch_page("pages/Login.py")
 # Header for the admin page
 st.header("Admin")
 st.write(f"You are logged in as Admin.")
+
 # Fetch the data from the 'log_tb' table using the DBConnection singleton
 def fetch_log_table_data():
     # Get the cursor from the DBConnection instance
@@ -26,7 +25,8 @@ def fetch_log_table_data():
     df = pd.DataFrame(records, columns=column_names)
     
     return df
+
 # Fetch and display the data from the 'log_tb' table
 log_data = fetch_log_table_data()
 st.write("Log Table Data:")
-st.dataframe(log_data) 
+st.dataframe(log_data)  # This will display the table in a nice format
