@@ -4,9 +4,9 @@
 ## **Assignment 2 - Automated Text Extraction & Client Application for GAIA Dataset**
 
 ### **Contributors**:
-- Sahiti Nallamolu
-- Vishodhan Krishnan
-- Vismay Devjee
+- Sahiti Nallamolu    33%
+- Vishodhan Krishnan  33%
+- Vismay Devjee       33%
 
 
 
