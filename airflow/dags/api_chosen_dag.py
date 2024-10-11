@@ -1,12 +1,15 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
+from pathlib import Path
 import boto3
 import fitz  # PyMuPDF library for PDF text extraction
 import os
 import mysql.connector
 import json
 from dotenv import load_dotenv
+from dotenv import find_dotenv
+
 
 load_dotenv()
 
@@ -96,16 +99,18 @@ def convert_pdf_to_text(**kwargs):
 # Define the DAG
 default_args = {
     'owner': 'user',
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
-    'start_date': datetime(2024, 10, 1)
+    'start_date': datetime(2024, 10, 1),
+    'execution_timeout': timedelta(minutes=10)
 }
 
 dag = DAG(
     'api_chosen_dag',
     default_args=default_args,
     description='A DAG to fetch a PDF from S3, convert it to text using PyMuPDF, and log the result',
-    schedule_interval=None  # Manual trigger only
+    schedule_interval=None, # Manual trigger only
+    catchup=False  
 )
 
 # Define tasks
