@@ -3,6 +3,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from pages.db import DBConnection  # Assuming this is in a separate file, e.g., db_connection.py
 
+if st.button("Back to Login"):
+            st.switch_page("pages/Login.py")
 # Header for the admin page
 st.header("Admin")
 st.write(f"You are logged in as Admin.")
