@@ -201,7 +201,6 @@ def user_landing():
         question = st.text_area("Question:", value=selected_question, key="edited_question",height=150)
         st.session_state['selected_question'] = question    # Save selected question in session state
         st.write(f"Accessing File: {str(file_path).split('/')[-1]}")  # Print the file name with extension
-        st.write(question)
         serial_num = selected_test_case
         task_id = serial_num
         
