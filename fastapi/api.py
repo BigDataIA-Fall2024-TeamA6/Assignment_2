@@ -22,9 +22,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("api_key")
 if api_key is None:
-    api_key = st.secrets["OPENAI_API_KEY"]
+    api_key = st.secrets["api_key"]
 
 client = OpenAI(api_key=api_key)
 
