@@ -14,7 +14,7 @@
 ---
 a. **Diagrams**: [GAIA Model Evaluation Workflow](https://github.com/BigDataIA-Fall2024-TeamA6/Assignment_2/blob/main/diagrams/pdf_processing_and_query_system.png)  
 b. **Fully Documented Code Labs**: [Codelabs Preview](https://codelabs-preview.appspot.com/?file_id=1t-3O6QNRqiGYo4EPxKj4iXyGJRKaXJCUTGWQlVc279o/#0)  
-c. **Video of the Submission**: [Zoom Recording]([https://northeastern.zoom.us/rec/share/MQzuXGKgKpGnDPtB6VAmGLEtU0ioh_46KcFMUtSH9CtFNUAalQ6dVYT5xFjuA7iw.V3glsyZ5cz9BKUDt](https://northeastern.zoom.us/rec/share/y5AKkIR5XGyJVfXQ-AKNK57QBSmCndTYEOied4tC0gCb2kvR-Y3ogQ3sFjzR9oza.1AwnxmFyDJoTEMut)
+c. **Video of the Submission**: [Zoom Recording](https://northeastern.zoom.us/rec/share/y5AKkIR5XGyJVfXQ-AKNK57QBSmCndTYEOied4tC0gCb2kvR-Y3ogQ3sFjzR9oza.1AwnxmFyDJoTEMut?startTime=1728633467000)
 d. **GitHub project**:[Project Link](https://github.com/BigDataIA-Fall2024-TeamA6/Assignment_2)
 
 
