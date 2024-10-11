@@ -19,11 +19,12 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us"
 
+PROJECT_ID = "principal-yen-437820-p1"
 SERV_ACC = f'docai-serv-acc@{PROJECT_ID}.iam.gserviceaccount.com'
-PROCESSOR_ID = os.getenv("PROCESSOR_ID")
+PROCESSOR_ID = "c3887fecff446591"
 
 MIME_TYPE = "application/pdf"
-assert PROJECT_ID, "PROJECT_ID is undefined"
+# assert PROJECT_ID, "PROJECT_ID is undefined"
 assert LOCATION in ("us", "eu"), "API_LOCATION is incorrect"
 
 
