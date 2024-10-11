@@ -4,7 +4,7 @@ import mysql.connector
 import requests
 
 app = FastAPI()
-FASTAPI_URL = "http://127.0.0.1:8000"
+FASTAPI_URL = "http://fastapi:8000"
 
 
 def create_connection():
@@ -32,9 +32,9 @@ def main():
     if st.button("Login",key='login'):
 
         response = requests.post(f"{FASTAPI_URL}/token", json={"username":username,"password": password,"user_type":user_type})
-        print(response.json())
-        st.session_state.access_token = response.json()['access_token']
+        print(response.json())        
         if response.status_code == 200:
+            st.session_state.access_token = response.json()['access_token']
             st.session_state.username = username
             if user_type == 'user':
                 st.switch_page("pages/user_landing.py")

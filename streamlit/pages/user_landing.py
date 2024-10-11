@@ -6,13 +6,17 @@ from pages.db import DBConnection
 import requests
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
+from pathlib import Path
+
+
+load_dotenv()
 
 app = FastAPI()
-FASTAPI_URL = "http://127.0.0.1:8000"
+FASTAPI_URL = "http://fastapi:8000"
 
 api_key = os.getenv("OPENAI_API_KEY")
-if api_key is None:
-    api_key = st.secrets["OPENAI_API_KEY"]
+
 
 try:
     db = DBConnection.get_instance()
@@ -63,7 +67,7 @@ def get_questions():
 
 def get_llm_output(question, extraction_output):
     try:
-        api_url = "http://localhost:8000/get_llm_output"
+        api_url = "http://fastapi:8000/get_llm_output"
         response = requests.post(api_url, json={"question": question, "extracted_output": extraction_output})
         if response.status_code == 200:
             return response.json().get("llm_output", "Value not found")
@@ -79,7 +83,7 @@ def get_llm_output(question, extraction_output):
 
 def trigger_airflow_dag(dag_id, api_chosen, file_path):
     # Airflow API URL
-    airflow_url = f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns"
+    airflow_url = f"http://airflow-webserver:8080/api/v1/dags/{dag_id}/dagRuns"
       
     # Data to trigger the DAG with API chosen and file path
     data = {
@@ -102,7 +106,7 @@ def trigger_airflow_dag(dag_id, api_chosen, file_path):
     
 def trigger_docai(dag_id, api_chosen, file_path):
 # Airflow API URL
-    airflow_url = f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns"
+    airflow_url = f"http://airflow-webserver:8080/api/v1/dags/{dag_id}/dagRuns"
 
 
     # Data to trigger the DAG with API chosen and file path
@@ -126,7 +130,7 @@ def trigger_docai(dag_id, api_chosen, file_path):
     
 
 def get_dag_run_output(dag_id, dag_run_id,api_chosen,selected_test_case):
-    airflow_dag_run_url = f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances"
+    airflow_dag_run_url = f"http://airflow-webserver:8080/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances"
     
     while True:
         response = requests.get(airflow_dag_run_url, auth=("airflow", "airflow"))
@@ -136,7 +140,7 @@ def get_dag_run_output(dag_id, dag_run_id,api_chosen,selected_test_case):
             
             if state == "success":
                 st.success("DAG run completed successfully!")
-                r = requests.get(url=f"http://localhost:8080/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances",auth=("airflow", "airflow"))
+                r = requests.get(url=f"http://airflow-webserver:8080/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances",auth=("airflow", "airflow"))
                 return True
             
 
@@ -162,19 +166,30 @@ def fetch_from_db(output_col: str, selected_test_case: int):
 def user_landing():
     if "pdf_extracted" not in st.session_state:
         st.session_state.pdf_extracted = False
-
-    col1, col2 = st.columns(2)
+    
+    col1, col2, col3 = st.columns(3)
+        
     with col1:
         st.header("XtractPDF App")
-    with col2:
-        if st.button("Go to Summary"):
-            st.switch_page("pages/summary.py")
+    with col3:
         
+        if st.button("Logout"):
+            # Clear the session state to remove the token and user-related data
+            st.session_state.pop("username", None)
+            st.session_state.pop("access_token", None)
+            st.success("You have been logged out!")
+            st.switch_page("pages/login.py")
+
+    with col3:
+        if st.button("Summary"):
+            st.switch_page("pages/summary.py") 
+
     if 'username' not in st.session_state:
         st.error("You need to log in first!")
         st.stop()
         
     username = st.session_state['username']
+
     
     test_cases = get_questions()
     test_cases_dict = dict(zip(test_cases['serial_num'], test_cases['question']))
@@ -214,13 +229,14 @@ def user_landing():
                         try:
                             res_json = json.loads(result[output_col])
                             pdf_text = res_json.get('text',None)
+                            #st.json(res_json)
                             st.text_area(value = pdf_text, label="PDF extraction output", height=150)
                             st.session_state.method_output = pdf_text
                             st.session_state.pdf_extracted = True
                             insert_log_into_log_tb(task_id, question, api_chosen, username, pdf_text)
     
-                        except json.JSONDecodeError as j:
-                            st.error(j)
+                        except:
+                            st.error("Unable to fetch result. Please try again!")
                             pass
                     else:
                         st.error("No output found for the selected test case.")

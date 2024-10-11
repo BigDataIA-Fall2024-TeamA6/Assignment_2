@@ -4,19 +4,21 @@ import boto3
 import mysql.connector
 from airflow import DAG
 from dotenv import load_dotenv
+from dotenv import find_dotenv
 from google.cloud import documentai
 from datetime import datetime, timedelta
 from google.oauth2 import service_account
 from google.api_core.client_options import ClientOptions
 from airflow.operators.python import PythonOperator
+from pathlib import Path
+
 
 load_dotenv()
-
 
 # AWS credentials (use environment variables in production)
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-PROJECT_ID = os.getenv("PROJECT_ID")
+PROJECT_ID = "principal-yen-437820-p1"
 LOCATION = "us"
 
 SERV_ACC = f'docai-serv-acc@{PROJECT_ID}.iam.gserviceaccount.com'

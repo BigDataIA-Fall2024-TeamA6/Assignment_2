@@ -9,6 +9,10 @@ from datetime import datetime, timedelta
 import mysql.connector
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
+from pathlib import Path
+
+
+load_dotenv()
 
 # Secret key for JWT
 SECRET_KEY = "bigdataintelligenceandanalytics"
@@ -20,15 +24,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  
 
 app = FastAPI()
-load_dotenv()
+
 
 api_key = os.getenv("OPENAI_API_KEY")
-if api_key is None:
-    api_key = st.secrets["OPENAI_API_KEY"]
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment variables")
 
 client = OpenAI(api_key=api_key)
-
-
 
 # Database connection
 def get_db_connection():
